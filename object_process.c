@@ -1,4 +1,4 @@
-#include "object_process.h"
+#include "../inc/object_process.h"
 
 int sort_by_density(char *filename)
 {
@@ -26,44 +26,15 @@ int sort_by_density(char *filename)
                 next_density = items[j].mass / items[j].volume;
                 if (tmp_density > next_density)
                 {
-                    buf.name = (char*)calloc(1, sizeof(items[i].name));
-                    if (buf.name == NULL)
-                    {
-                        fclose(f);
-                        free_struct(&items, &count);
-                        free(items);
-                        return ERR_MEMORY_ALLOCATION;
-                    }
-                    strcpy(buf.name, items[i].name);
+                    buf.name = items[i].name;
                     buf.mass = items[i].mass;
                     buf.volume = items[i].volume;
-                    free(items[i].name);
-                    items[i].name = (char*)calloc(1, sizeof(items[j].name));
-                    if (items[i].name == NULL)
-                    {
-                        fclose(f);
-                        free(buf.name);
-                        free_struct(&items, &count);
-                        free(items);
-                        return ERR_MEMORY_ALLOCATION;
-                    }
-                    strcpy(items[i].name, items[j].name);
+                    items[i].name = items[j].name;
                     items[i].mass = items[j].mass;
                     items[i].volume = items[j].volume;
-                    free(items[j].name);
-                    items[j].name = (char*)calloc(1, sizeof(buf.name));
-                    if (items[j].name == NULL)
-                    {
-                        fclose(f);
-                        free(buf.name);
-                        free_struct(&items, &count);
-                        free(items);
-                        return ERR_MEMORY_ALLOCATION;
-                    }
-                    strcpy(items[j].name, buf.name);
+                    items[j].name = items[i].name;
                     items[j].mass = buf.mass;
                     items[j].volume = buf.volume;
-                    free(buf.name);
                 }
             }
     for (i = 0; i <= count; i++)
@@ -148,7 +119,7 @@ int input_array(FILE *f, struct object *items[], long *count)
 
     rewind(f);
     *items = calloc(num, sizeof(struct object));
-    if (items == NULL)
+    if (*items == NULL)
         return ERR_MEMORY_ALLOCATION;
     flag = read_struct(f, &(*items)[*count]);
     if (flag == ERR_BAD_DATA || (*items)[*count].mass <= 0.0 || (*items)[*count].volume <= 0.0)
@@ -174,10 +145,10 @@ int input_array(FILE *f, struct object *items[], long *count)
 int read_struct(FILE *f, struct object *tmp_item)
 {
     size_t len = 0;
-    long read;
+    int read;
     double m, v;
 
-    read = getline_new(&(tmp_item->name), &len, f);
+    read = getline(&(tmp_item->name), &len, f);
     if (read <= 0)
     {
         if (read == 0 && feof(f) != 0)
@@ -206,7 +177,7 @@ int read_struct(FILE *f, struct object *tmp_item)
     return EXIT_SUCCESS;
 }
 
-int getline_new(char **lineptr, size_t *n, FILE *file)
+int getline(char **lineptr, size_t *n, FILE *file)
 {
     size_t max_l = 16, new_max_l = max_l;
     char *flag;
@@ -245,6 +216,7 @@ int getline_new(char **lineptr, size_t *n, FILE *file)
                 free(*lineptr);
                 return -1;
             }
+            *lineptr = flag;
             if (fgets((*lineptr + len), max_l + 1, file) == NULL)
             {
                 free(*lineptr);
@@ -263,6 +235,7 @@ int getline_new(char **lineptr, size_t *n, FILE *file)
         free(*lineptr);
         return -1;
     }
+    *lineptr = flag;
     *n = len;
     return len;
 }
