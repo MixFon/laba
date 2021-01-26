@@ -167,11 +167,37 @@ int read_struct(FILE *f, struct object *tmp_item)
     tmp_item->mass = atof(temp);
 	//printf("tmp_item->mass = {%lf}\n", tmp_item->mass);
 	free(temp);
+    if (read <= 0)
+    {
+        if (read == 0 && feof(f) != 0)
+        {
+            free(tmp_item->name);
+            return EXIT_SUCCESS;
+        }
+        else
+        {
+            free(tmp_item->name);
+            return ERR_BAD_DATA;
+        }
+    }
 
     read = getline(&temp, &len, f);
     tmp_item->volume = atof(temp);
 	//printf("tmp_item->volume = {%lf}\n", tmp_item->mass);
 	free(temp);
+    if (read <= 0)
+    {
+        if (read == 0 && feof(f) != 0)
+        {
+            free(tmp_item->name);
+            return EXIT_SUCCESS;
+        }
+        else
+        {
+            free(tmp_item->name);
+            return ERR_BAD_DATA;
+        }
+    }
 
     //tmp_item->mass = m;
     //tmp_item->volume = v;
