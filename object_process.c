@@ -1,4 +1,4 @@
-#include "../inc/object_process.h"
+#include "object_process.h"
 
 int sort_by_density(char *filename)
 {
@@ -32,7 +32,7 @@ int sort_by_density(char *filename)
                     items[i].name = items[j].name;
                     items[i].mass = items[j].mass;
                     items[i].volume = items[j].volume;
-                    items[j].name = items[i].name;
+                    items[j].name = buf.name;
                     items[j].mass = buf.mass;
                     items[j].volume = buf.volume;
                 }
@@ -162,18 +162,19 @@ int read_struct(FILE *f, struct object *tmp_item)
             return ERR_BAD_DATA;
         }
     }
-    if (fscanf(f, "%lf%*1[\n]", &m) != 1)
-    {
-        free(tmp_item->name);
-        return ERR_BAD_DATA;
-    }
-    if (fscanf(f, "%lf%*1[\n]", &v) != 1)
-    {
-        free(tmp_item->name);
-        return ERR_BAD_DATA;
-    }
-    tmp_item->mass = m;
-    tmp_item->volume = v;
+	char *temp = NULL;
+    read = getline(&temp, &len, f);
+    tmp_item->mass = atof(temp);
+	//printf("tmp_item->mass = {%lf}\n", tmp_item->mass);
+	free(temp);
+
+    read = getline(&temp, &len, f);
+    tmp_item->volume = atof(temp);
+	//printf("tmp_item->volume = {%lf}\n", tmp_item->mass);
+	free(temp);
+
+    //tmp_item->mass = m;
+    //tmp_item->volume = v;
     return EXIT_SUCCESS;
 }
 
@@ -242,7 +243,7 @@ int getline(char **lineptr, size_t *n, FILE *file)
 
 void free_struct(struct object *items[], long *count)
 {
-    for (long i = 0; i <= *count; i++)
+    for (long i = 0; i <= *count; i++) // <=
         free((*items)[i].name);
 }
 
@@ -257,3 +258,40 @@ long count_structs(FILE *f)
     return count;
 }
 
+/*
+
+int read_struct(FILE *f, struct object *tmp_item)
+{
+    size_t len = 0;
+    int read;
+    double m, v;
+
+    read = getline(&(tmp_item->name), &len, f);
+    if (read <= 0)
+    {
+        if (read == 0 && feof(f) != 0)
+        {
+            free(tmp_item->name);
+            return EXIT_SUCCESS;
+        }
+        else
+        {
+            free(tmp_item->name);
+            return ERR_BAD_DATA;
+        }
+    }
+    if (fscanf(f, "%lf%*1[\n]", &m) != 1)
+    {
+        free(tmp_item->name);
+        return ERR_BAD_DATA;
+    }
+    if (fscanf(f, "%lf%*1[\n]", &v) != 1)
+    {
+        free(tmp_item->name);
+        return ERR_BAD_DATA;
+    }
+    tmp_item->mass = m;
+    tmp_item->volume = v;
+    return EXIT_SUCCESS;
+}
+*/
