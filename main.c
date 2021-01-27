@@ -2,27 +2,27 @@
 
 int main(int argc, char **argv)
 {
+	g_size = 2;
+	g_count = 0;
     long int err_lvl = EXIT_SUCCESS;
     setbuf(stdout, NULL);
-
-    if (argc == 2)
-    {
-        err_lvl = sort_by_density(argv[1]);
-        return err_lvl;
-    }
-    if (argc == 3)
-    {
+	t_obj *arr_obj;
+	if (argc < 2)
+		return (0);
+	if (!(arr_obj = (t_obj *)malloc(sizeof(t_obj) * g_size)))
+		sys_err("Memory allocation.", ERR_MEMORY_ALLOCATION);
+	read_objeckts(&arr_obj, argv[1]);
+	if (argc == 2)
+	{
+		sort_items(arr_obj);
+		print_arr_obj(arr_obj);
+	}
+	else if (argc == 3)
+	{
         if (strncmp(argv[2], "ALL", 3) == 0)
-        {
-            err_lvl = print_array(argv[1]);
-            return err_lvl;
-        }
-        else
-        {
-            err_lvl = find_in_array(argv[1], argv[2]);
-            return err_lvl;
-        }
-    }
-    else
-        return ERR_BAD_KEYS;
+			print_arr_obj(arr_obj);
+		else
+			print_sub_string(arr_obj, argv[2]);
+	}
+	return (0);	
 }

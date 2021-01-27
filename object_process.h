@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include <ctype.h>
 
 //Все возможные коды ошибок программы.
 #define ERR_NO_FILE -1
@@ -13,21 +14,24 @@
 #define ERR_BAD_KEYS -4
 #define ERR_MEMORY_ALLOCATION -5
 
-struct object
+
+size_t	g_size;
+size_t	g_count;
+
+typedef struct	s_obj
 {
-    char *name;
-    double mass;
-    double volume;
-};
+    char		*name;
+    double		mass;
+    double		volume;
+	double		density;
+}				t_obj;
 
-int sort_by_density(char *filename);
-int print_array(char *filename);
-int find_in_array(char *filename, char *substr);
-int input_array(FILE *f, struct object *items[], long *count);
-
-int read_struct(FILE *f, struct object *tmp_item);
-int getline_new(char **lineptr, size_t *n, FILE *file);
-void free_struct(struct object *items[], long *count);
-long count_structs(FILE *f);
-
+void print_item(t_obj *item);
+void print_arr_obj(t_obj *items);
+void	sys_err(char *str, int error);
+int	check_number(char *line);
+void	check_mass_volume(char *line);
+void	read_objeckts(t_obj **objs, char *name_file);
+void	sort_items(t_obj *items);
+void	print_sub_string(t_obj *items, char *sub_str);
 #endif

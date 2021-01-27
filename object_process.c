@@ -1,323 +1,127 @@
 #include "object_process.h"
 
-int sort_by_density(char *filename)
+void print_item(t_obj *item)
 {
-    struct object *items = NULL;
-    FILE *f;
-    struct object buf;
-    double tmp_density, next_density;
-    long count = 0, i, j;
-    int flag;
+	printf("name = {%s}\n", item->name);
+	printf("mass = {%lf}\n", item->mass);
+	printf("volume = {%lf}\n", item->volume);
+	printf("density = {%lf}\n", item->density);
 
-    f = fopen(filename, "r");
-    if (f == NULL)
-        return ERR_OPEN_FILE;
-    flag = input_array(f, &items, &count);
-    if (flag != EXIT_SUCCESS)
-    {
-        fclose(f);
-        return flag;
-    }
-    if (count > 0)
-        for (i = 0; i < count; i++)
-            for (j = i + 1; j <= count; j++)
-            {
-                tmp_density = items[i].mass / items[i].volume;
-                next_density = items[j].mass / items[j].volume;
-                if (tmp_density > next_density)
-                {
-                    buf.name = items[i].name;
-                    buf.mass = items[i].mass;
-                    buf.volume = items[i].volume;
-                    items[i].name = items[j].name;
-                    items[i].mass = items[j].mass;
-                    items[i].volume = items[j].volume;
-                    items[j].name = buf.name;
-                    items[j].mass = buf.mass;
-                    items[j].volume = buf.volume;
-                }
-            }
-    for (i = 0; i <= count; i++)
-    {
-        printf("%s\n", items[i].name);
-        printf("%lf\n", items[i].mass);
-        printf("%lf\n", items[i].volume);
-    }
-    fclose(f);
-    free_struct(&items, &count);
-    free(items);
-    return EXIT_SUCCESS;
 }
 
-int print_array(char *filename)
+void print_arr_obj(t_obj *items)
 {
-    struct object *items = NULL;
-    FILE *f;
-    long count = 0, i;
-    int flag;
-
-    f = fopen(filename, "r");
-    if (f == NULL)
-        return ERR_OPEN_FILE;
-    flag = input_array(f, &items, &count);
-    if (flag != EXIT_SUCCESS)
-    {
-        fclose(f);
-        return flag;
-    }
-    for (i = 0; i <= count; i++)
-    {
-        printf("%s\n", items[i].name);
-        printf("%lf\n", items[i].mass);
-        printf("%lf\n", items[i].volume);
-    }
-    fclose(f);
-    free_struct(&items, &count);
-    free(items);
-    return EXIT_SUCCESS;
+	for(int i = 0; i < g_count; i++)
+		print_item(items + i);
 }
 
-int find_in_array(char *filename, char *substr)
+void	sys_err(char *str, int error)
 {
-    struct object *items = NULL;
-    FILE *f;
-    long count = 0, i, cnt_found = 0;
-    int flag;
-    size_t string_length;
-
-    f = fopen(filename, "r");
-    if (f == NULL)
-        return ERR_OPEN_FILE;
-    flag = input_array(f, &items, &count);
-    if (flag != EXIT_SUCCESS)
-    {
-        fclose(f);
-        return flag;
-    }
-    string_length = strlen(substr);
-    for (i = 0; i <= count; i++)
-        if (strncmp(substr, items[i].name, string_length) == 0)
-        {
-            printf("%s\n", items[i].name);
-            printf("%lf\n", items[i].mass);
-            printf("%lf\n", items[i].volume);
-            cnt_found += 1;
-        }
-    fclose(f);
-    free_struct(&items, &count);
-    free(items);
-    if (cnt_found == 0)
-        return ERR_BAD_DATA;
-    else
-        return EXIT_SUCCESS;
+	fprintf(stderr, "Error. %s\n", str);
+	exit(error);
 }
 
-int input_array(FILE *f, struct object *items[], long *count)
+int	check_number(char *line)
 {
-    int flag = EXIT_SUCCESS;
-    long i, num = count_structs(f);
-
-    rewind(f);
-    *items = calloc(num, sizeof(struct object));
-    if (*items == NULL)
-        return ERR_MEMORY_ALLOCATION;
-    flag = read_struct(f, &(*items)[*count]);
-    if (flag == ERR_BAD_DATA || (*items)[*count].mass <= 0.0 || (*items)[*count].volume <= 0.0)
-    {
-        free((*items)[*count].name);
-        free(*items);
-        return ERR_BAD_DATA;
-    }
-    for (i = 1; i < num; i++)
-    {
-        *count += 1;
-        flag = read_struct(f, &(*items)[*count]);
-        if (flag == ERR_BAD_DATA || (*items)[*count].mass <= 0.0 || (*items)[*count].volume <= 0.0)
-        {
-            free_struct(items, count);
-            free(*items);
-            return ERR_BAD_DATA;
-        }
-    }
-    return EXIT_SUCCESS;
+	while(*line != '\0')
+	{
+		if (!isdigit(*line) && *line != '.')
+			return (0);
+		line++;
+	}
+	return (1);
 }
 
-int read_struct(FILE *f, struct object *tmp_item)
+void	check_mass_volume(char *line)
 {
-    size_t len = 0;
-    int read;
-    double m, v;
-
-    read = getline(&(tmp_item->name), &len, f);
-    if (read <= 0)
-    {
-        if (read == 0 && feof(f) != 0)
-        {
-            free(tmp_item->name);
-            return EXIT_SUCCESS;
-        }
-        else
-        {
-            free(tmp_item->name);
-            return ERR_BAD_DATA;
-        }
-    }
-	char *temp = NULL;
-    read = getline(&temp, &len, f);
-    tmp_item->mass = atof(temp);
-	//printf("tmp_item->mass = {%lf}\n", tmp_item->mass);
-	free(temp);
-    if (read <= 0)
-    {
-        if (read == 0 && feof(f) != 0)
-        {
-            free(tmp_item->name);
-            return EXIT_SUCCESS;
-        }
-        else
-        {
-            free(tmp_item->name);
-            return ERR_BAD_DATA;
-        }
-    }
-
-    read = getline(&temp, &len, f);
-    tmp_item->volume = atof(temp);
-	//printf("tmp_item->volume = {%lf}\n", tmp_item->mass);
-	free(temp);
-    if (read <= 0)
-    {
-        if (read == 0 && feof(f) != 0)
-        {
-            free(tmp_item->name);
-            return EXIT_SUCCESS;
-        }
-        else
-        {
-            free(tmp_item->name);
-            return ERR_BAD_DATA;
-        }
-    }
-
-    //tmp_item->mass = m;
-    //tmp_item->volume = v;
-    return EXIT_SUCCESS;
+	double temp = atof(line);
+	if (temp <= 0)
+		sys_err("Vrong data.", ERR_BAD_DATA);
 }
 
-int getline(char **lineptr, size_t *n, FILE *file)
+void	read_objeckts(t_obj **objs, char *name_file)
 {
-    size_t max_l = 16, new_max_l = max_l;
-    char *flag;
-    char *ptr = NULL;
-    size_t len;
+    FILE	*f;
+	char	*line = NULL;
+	size_t	size = 0;
 
-    if (ferror(file))
-        return -1;
-    if (feof(file))
-        return -1;
-    *lineptr = (char*)calloc(max_l, sizeof(char));
-    if (*lineptr == NULL)
-    {
-        return -1;
-    }
-    if (fgets(*lineptr, max_l, file) == NULL && feof(file) == 0)
-    {
-        free(*lineptr);
-        if (feof(file) == 0)
-            return 0;
-        else
-            return -1;
-    }
-    ptr = strchr(*lineptr, '\n');
-    if (ptr != NULL)
-        *ptr = '\0';
-    len = strlen(*lineptr);
-    if (ptr == NULL && len == max_l)
-    {
-        while (ptr == NULL && len == new_max_l - 1)
-        {
-            new_max_l *= 2;
-            flag = (char*)realloc(*lineptr, new_max_l);
-            if (flag == NULL)
-            {
-                free(*lineptr);
-                return -1;
-            }
-            *lineptr = flag;
-            if (fgets((*lineptr + len), max_l + 1, file) == NULL)
-            {
-                free(*lineptr);
-                return -1;
-            }
-            max_l *= 2;
-            ptr = strchr(*lineptr, '\n');
-            if (ptr != NULL)
-                *ptr = '\0';
-            len = strlen(*lineptr);
-        }
-    }
-    flag = (char*)realloc(*lineptr, len + 1);
-    if (flag == NULL)
-    {
-        free(*lineptr);
-        return -1;
-    }
-    *lineptr = flag;
-    *n = len;
-    return len;
+    f = fopen(name_file, "r");
+	if (f == NULL)
+		sys_err("Invalid file name.", ERR_OPEN_FILE);
+	ssize_t read;	
+	size_t i = 0;
+	while((read = getline(&line, &size, f)) != -1)
+	{
+		size_t index = i / 3;
+		line[read - 1] = '\0';
+		if (i % 3 == 0)
+			(*objs)[index].name = strdup(line);
+		else
+		{
+			if (!check_number(line))
+				sys_err("Vrong number.", ERR_BAD_DATA);
+			if (i % 3 == 1)
+			{
+				check_mass_volume(line);
+				(*objs)[index].mass = atof(line);
+			}
+			if (i % 3 == 2)
+			{
+				check_mass_volume(line);
+				(*objs)[index].volume = atof(line);
+			}
+		}
+		(*objs)[index].density = (*objs)[index].mass / (*objs)[index].volume;
+		free(line);
+		line = NULL;
+		i++; 
+		if (i / 3  >= g_size)
+		{
+			g_size *= 2;
+			if (!(*objs = (t_obj *)realloc(*objs, sizeof(t_obj) * g_size)))
+				sys_err("Memory allocation.", ERR_MEMORY_ALLOCATION);
+		}
+	}
+	fclose(f);
+	if (i % 3 != 0)
+		sys_err("Vrong count struct", ERR_BAD_DATA);
+	g_count = i / 3;
 }
 
-void free_struct(struct object *items[], long *count)
+void	sort_items(t_obj *items)
 {
-    for (long i = 0; i <= *count; i++) // <=
-        free((*items)[i].name);
+	for (int i = 0; i < g_count; i++)
+		for (int j = 0; j < g_count; j++)
+		{
+			if (items[i].density < items[j].density)
+			{
+				t_obj buf;
+				buf.name = items[i].name;
+				buf.mass = items[i].mass;
+				buf.volume = items[i].volume;
+				buf.density = items[i].density;
+
+				items[i].name = items[j].name;
+				items[i].mass = items[j].mass;
+				items[i].volume = items[j].volume;
+				items[i].density = items[j].density;
+
+				items[j].name = buf.name;
+				items[j].mass = buf.mass;
+				items[j].volume = buf.volume;
+				items[j].density = buf.density;
+			}
+		}
 }
 
-long count_structs(FILE *f)
+void	print_sub_string(t_obj *items, char *sub_str)
 {
-    long count = 0;
-    int buf;
-    for (long i = 0; (buf = fgetc(f)) != EOF; i++)
-        if (buf == '\n')
-            count += 1;
-    count /= 3;
-    return count;
+	for (int i = 0; i < g_count; i++)
+	{
+		char *iter = strstr(items[i].name, sub_str);
+		if (iter != NULL && iter - items[i].name == 0 && *sub_str != '\0')
+			print_item(items + i);
+		if (*items[i].name == '\0' && *sub_str == '\0')
+			print_item(items + i);
+	}	
 }
-
-/*
-
-int read_struct(FILE *f, struct object *tmp_item)
-{
-    size_t len = 0;
-    int read;
-    double m, v;
-
-    read = getline(&(tmp_item->name), &len, f);
-    if (read <= 0)
-    {
-        if (read == 0 && feof(f) != 0)
-        {
-            free(tmp_item->name);
-            return EXIT_SUCCESS;
-        }
-        else
-        {
-            free(tmp_item->name);
-            return ERR_BAD_DATA;
-        }
-    }
-    if (fscanf(f, "%lf%*1[\n]", &m) != 1)
-    {
-        free(tmp_item->name);
-        return ERR_BAD_DATA;
-    }
-    if (fscanf(f, "%lf%*1[\n]", &v) != 1)
-    {
-        free(tmp_item->name);
-        return ERR_BAD_DATA;
-    }
-    tmp_item->mass = m;
-    tmp_item->volume = v;
-    return EXIT_SUCCESS;
-}
-*/
