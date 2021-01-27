@@ -24,5 +24,6 @@ int main(int argc, char **argv)
 		else
 			print_sub_string(arr_obj, argv[2]);
 	}
+	free_struct(&arr_obj);
 	return (0);	
 }

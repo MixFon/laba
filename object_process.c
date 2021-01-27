@@ -82,6 +82,7 @@ void	read_objeckts(t_obj **objs, char *name_file)
 				sys_err("Memory allocation.", ERR_MEMORY_ALLOCATION);
 		}
 	}
+	free(line);
 	fclose(f);
 	if (i % 3 != 0)
 		sys_err("Vrong count struct", ERR_BAD_DATA);
@@ -124,4 +125,11 @@ void	print_sub_string(t_obj *items, char *sub_str)
 		if (*items[i].name == '\0' && *sub_str == '\0')
 			print_item(items + i);
 	}	
+}
+
+void free_struct(t_obj **items)
+{
+    for (size_t i = 0; i < g_count; i++) // <=
+        free((*items)[i].name);
+	free(*items);
 }
